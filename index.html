@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Moorhuhnium</title>
+  <style>
+    body {
+      
+      
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    #gameContainer {
+      background-size:contain;  
+      background: url('images/background.png') no-repeat center center fixed;
+      position: relative;
+      width: 900px;
+      margin: 20px auto;
+      user-select: none;
+    }
+
+    #gameCanvas {
+      background: transparent;
+      display: block;
+      border: 2px solid white;
+      cursor: crosshair;
+    }
+
+    #uiOverlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    #scoreDisplay, #ammoDisplay, #timerDisplay {
+      font-size: 22px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.5);
+      padding: 6px 10px;
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    /* Start Screen & Leaderboard Overlay */
+    #startScreen, #leaderboardScreen {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      color: white;
+    }
+
+    #startScreen input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 15px;
+      width: 250px;
+      text-align: center;
+    }
+
+    #startScreen button, #leaderboardScreen button {
+      font-size: 18px;
+      padding: 10px 25px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #2ecc71;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+
+    #startScreen button:hover, #leaderboardScreen button:hover {
+      background-color: #27ae60;
+    }
+
+    #leaderboardScreen h2 {
+      margin-bottom: 15px;
+    }
+
+    #leaderboardList {
+      margin-bottom: 20px;
+      width: 300px;
+      text-align: left;
+      font-size: 18px;
+    }
+
+    #leaderboardList li {
+      padding: 4px 0;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="uiOverlay">
+      <div id="scoreDisplay">Score: 0</div>
+      <div id="timerDisplay">Time: 30</div>
+      <div id="ammoDisplay">Ammo: 8</div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="startScreen">
+      <h1>Enter your name</h1>
+      <input type="text" id="playerNameInput" placeholder="Your name" maxlength="15" />
+      <button id="startGameBtn">Start Game</button>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="leaderboardScreen" style="display:none;">
+      <h2>Round Over! Leaderboard</h2>
+      <ul id="leaderboardList"></ul>
+      <button id="restartGameBtn">Play Again</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
