@@ -33,27 +33,19 @@ let shotReloadTimeout = null; // Timeout-ID für das Nachladen nach einem Schuss
 
 let DEBUG_MODE = false; // DEBUG-MODUS zum Anzeigen der Hitboxen
 
-// VON DIR DEFINIERTE HEADSHOT-ZONEN
+// DEFINIERTE HEADSHOT-ZONEN
 const chickenHeadshotZones = [
-    { // chicken1.png
-        relX: 0.1073, relY: 0.0455, relWidth: 0.5645, relHeight: 0.4018
-    },
-    { // chicken2.png
-        relX: 0.5202, relY: 0.2104, relWidth: 0.3500, relHeight: 0.5861
-    },
-    { // chicken3.png
-        relX: 0.4702, relY: 0.2012, relWidth: 0.4048, relHeight: 0.3745
-    },
-    { // chicken4.png
-        relX: 0.4088, relY: 0.3274, relWidth: 0.3565, relHeight: 0.2323
-    },
+    { relX: 0.1073, relY: 0.0455, relWidth: 0.5645, relHeight: 0.4018 },
+    { relX: 0.5202, relY: 0.2104, relWidth: 0.3500, relHeight: 0.5861 },
+    { relX: 0.4702, relY: 0.2012, relWidth: 0.4048, relHeight: 0.3745 },
+    { relX: 0.4088, relY: 0.3274, relWidth: 0.3565, relHeight: 0.2323 },
 ];
 
 
 // --- Konstanten ---
 const GAME_ASPECT_RATIO = 800 / 600; // Breite / Höhe für Canvas
 const MAX_CANVAS_WIDTH = 1000; // Maximale Breite des Canvas
-const CONTAINER_PADDING = 40; // Polsterung des Game Containers, für Canvas-Berechnung
+const CONTAINER_PADDING = 10; // Polsterung innerhalb des Page-Containers
 
 const GAME_DURATION = 30; // Sekunden Spielzeit
 const INITIAL_AMMO = 8; // Startmunition und maximale Munition
@@ -93,30 +85,35 @@ function showCustomAlert(message) {
 }
 
 function resizeCanvas() {
-    const gameContainer = document.getElementById('gameContainer');
-    let newWidth = gameContainer.clientWidth - CONTAINER_PADDING;
-    let newHeight = newWidth / GAME_ASPECT_RATIO;
-
-    if (newHeight > window.innerHeight - CONTAINER_PADDING) {
-        newHeight = window.innerHeight - CONTAINER_PADDING;
-        newWidth = newHeight * GAME_ASPECT_RATIO;
-    }
-
+    const gameWrapper = document.getElementById('game-wrapper');
+    let newWidth = gameWrapper.clientWidth;
+    
     if (newWidth > MAX_CANVAS_WIDTH) {
         newWidth = MAX_CANVAS_WIDTH;
-        newHeight = newWidth / GAME_ASPECT_RATIO;
     }
-
+    let newHeight = newWidth / GAME_ASPECT_RATIO;
+    
     canvas.width = newWidth;
     canvas.height = newHeight;
+    
+    const uiBar = document.getElementById('ui-bar');
+    uiBar.style.width = `${newWidth}px`;
 
     const baseCanvasWidth = 800;
     reloadBtn.scale = canvas.width / baseCanvasWidth;
 
-    reloadBtn.width = 120 * reloadBtn.scale;
-    reloadBtn.height = 40 * reloadBtn.scale;
-    reloadBtn.x = canvas.width - reloadBtn.width - 10 * reloadBtn.scale;
-    reloadBtn.y = canvas.height - reloadBtn.height - 10 * reloadBtn.scale;
+    // KORRIGIERTE BUTTON-GRÖSSE FÜR MOBILE GERÄTE
+    const baseWidth = 120;
+    const baseHeight = 40;
+    const minWidth = 90; // Mindestbreite des Buttons in Pixeln
+    const minHeight = 45; // Mindesthöhe des Buttons in Pixeln
+
+    reloadBtn.width = Math.max(baseWidth * reloadBtn.scale, minWidth);
+    reloadBtn.height = Math.max(baseHeight * reloadBtn.scale, minHeight);
+
+    const padding = 15; // Fester Abstand zum Rand
+    reloadBtn.x = canvas.width - reloadBtn.width - padding;
+    reloadBtn.y = canvas.height - reloadBtn.height - padding;
 }
 
 
@@ -243,7 +240,6 @@ function drawReloadButton() {
     ctx.fillText(text, reloadBtn.x + reloadBtn.width / 2, reloadBtn.y + reloadBtn.height / 2);
 }
 
-// Funktion zum korrigieren der negativen Breiten/Höhen
 function normalizeZone(zone) {
     const normalized = {...zone};
     if (normalized.relWidth < 0) {
@@ -287,6 +283,9 @@ async function preloadAssets() {
     sounds.reloadAfterShot = new Audio('sounds/reload1.mp3');
     sounds.reloadManual = new Audio('sounds/reload2.mp3');
     sounds.headshot = new Audio('sounds/headshot.mp3');
+    sounds.background = new Audio('sounds/background.mp3');
+    sounds.background.loop = true;
+    sounds.background.volume = 0.6;
     
     const soundPromises = Object.values(sounds).map(sound => {
         return new Promise(resolve => {
@@ -346,12 +345,22 @@ function updateGame() {
 
         if (DEBUG_MODE) {
             ctx.save();
+            // Körper-Hitbox
             ctx.fillStyle = 'rgba(0, 0, 255, 0.3)';
             ctx.fillRect(chicken.x, chicken.y, chicken.width, chicken.height);
-            const headshotX = chicken.x + chicken.width * chicken.headshotZone.relX;
+            
+            // Headshot-Hitbox (korrigiert für beide Richtungen)
+            let headshotX;
             const headshotY = chicken.y + chicken.height * chicken.headshotZone.relY;
             const headshotWidth = chicken.width * chicken.headshotZone.relWidth;
             const headshotHeight = chicken.height * chicken.headshotZone.relHeight;
+
+            if (chicken.direction === 'left') { // Huhn kommt von rechts, Bild ist gespiegelt
+                headshotX = chicken.x + chicken.width * (1 - chicken.headshotZone.relX - chicken.headshotZone.relWidth);
+            } else { // Huhn kommt von links, Bild ist normal
+                headshotX = chicken.x + chicken.width * chicken.headshotZone.relX;
+            }
+            
             ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
             ctx.fillRect(headshotX, headshotY, headshotWidth, headshotHeight);
             ctx.restore();
@@ -432,10 +441,18 @@ function handleShot(clickX, clickY) {
     for (let i = chickens.length - 1; i >= 0; i--) {
         const chicken = chickens[i];
         if (clickX >= chicken.x && clickX <= chicken.x + chicken.width && clickY >= chicken.y && clickY <= chicken.y + chicken.height) {
-            const headshotX = chicken.x + chicken.width * chicken.headshotZone.relX;
+            
+            // KORRIGIERTE HEADSHOT-LOGIK
+            let headshotX;
             const headshotY = chicken.y + chicken.height * chicken.headshotZone.relY;
             const headshotWidth = chicken.width * chicken.headshotZone.relWidth;
             const headshotHeight = chicken.height * chicken.headshotZone.relHeight;
+
+            if (chicken.direction === 'left') { // Huhn kommt von rechts, Bild ist gespiegelt
+                headshotX = chicken.x + chicken.width * (1 - chicken.headshotZone.relX - chicken.headshotZone.relWidth);
+            } else { // Huhn kommt von links, Bild ist normal
+                headshotX = chicken.x + chicken.width * chicken.headshotZone.relX;
+            }
 
             if (clickX >= headshotX && clickX <= headshotX + headshotWidth && clickY >= headshotY && clickY <= headshotY + headshotHeight) {
                 const headshotPoints = chicken.points * 3;
@@ -485,6 +502,10 @@ function startTimer() {
 function endRound() {
     gameStarted = false;
     cancelReload();
+    if (sounds.background) {
+        sounds.background.pause();
+        sounds.background.currentTime = 0;
+    }
     showLeaderboard();
 }
 
@@ -503,61 +524,57 @@ function startGame() {
         showCustomAlert('Bitte gib deinen Namen ein!');
         return;
     }
-    startScreen.style.display = 'none';
-    leaderboardScreen.style.display = 'none';
-
+    
     const lowerName = playerName.toLowerCase();
-    const noobNames = ["nordhuen", "globi", "globivogel"]; 
+    const noobNames = ["nordhuen", "globi", "globivogel"];
+    let specialMessageType = null;
 
     if (noobNames.includes(lowerName)) {
-        showNoobMessage(actuallyStartGame);
+        specialMessageType = 'noob';
     } else if (lowerName === "lou" || lowerName === "louise") {
-        showHeart(actuallyStartGame);
-    } else {
-        actuallyStartGame();
+        specialMessageType = 'heart';
     }
+    
+    actuallyStartGame(specialMessageType);
 }
 
-function actuallyStartGame() {
+function actuallyStartGame(specialMessageType = null) {
+    startScreen.style.display = 'none';
+    leaderboardScreen.style.display = 'none';
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    ctx.font = `bold ${40 * reloadBtn.scale}px Arial`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = "black";
-    ctx.fillText("LOS GEHT'S!", canvas.width / 2, canvas.height / 2);
+
+    let messageText = "LOS GEHT'S!";
+    let textColor = "black";
+    let textFont = `bold ${40 * reloadBtn.scale}px Arial`;
+
+    if (specialMessageType === 'noob') {
+        messageText = "HAHA du noob!!";
+        textColor = "orange";
+    } else if (specialMessageType === 'heart') {
+        messageText = "❤️";
+        textFont = `${80 * reloadBtn.scale}px Arial`;
+        textColor = "red";
+    }
+    
+    ctx.font = textFont;
+    ctx.fillStyle = textColor;
+    ctx.fillText(messageText, canvas.width / 2, canvas.height / 2);
     ctx.restore();
+
+    if (sounds.background) {
+        sounds.background.play().catch(e => console.error("Background music error:", e));
+    }
 
     setTimeout(() => {
         gameStarted = true;
         resetGame();
         startTimer();
         updateGame();
-    }, 1000);
-}
-
-function showNoobMessage(callback) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.font = `bold ${40 * reloadBtn.scale}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "orange";
-    ctx.fillText("HAHA du noob!!", canvas.width / 2, canvas.height / 2);
-    ctx.restore();
-    setTimeout(callback, 1000);
-}
-
-function showHeart(callback) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.font = `${80 * reloadBtn.scale}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "red";
-    ctx.fillText("❤️", canvas.width / 2, canvas.height / 2);
-    ctx.restore();
-    setTimeout(callback, 1000);
+    }, 1500);
 }
 
 window.addEventListener('keydown', (e) => {
@@ -573,6 +590,7 @@ function handleCanvasInteraction(e) {
     const rect = canvas.getBoundingClientRect();
     let clientX, clientY;
     if (e.type === 'touchstart') {
+        if(startScreen.style.display === 'flex' || leaderboardScreen.style.display === 'flex' || customAlert.style.display === 'flex') return;
         clientX = e.touches[0].clientX;
         clientY = e.touches[0].clientY;
     } else {
@@ -612,19 +630,21 @@ canvas.addEventListener('mousemove', (e) => {
 startGameBtn.addEventListener('click', startGame);
 restartGameBtn.addEventListener('click', () => {
     leaderboardScreen.style.display = 'none';
-    startScreen.style.display = 'flex';
+    startScreen.style.display = 'flex'; 
     playerNameInput.value = '';
     scoreDisplay.textContent = 'Score: 0';
     ammoDisplay.textContent = `Ammo: ${INITIAL_AMMO}`;
     timerDisplay.textContent = `Time: ${GAME_DURATION}`;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (sounds.background) {
+        sounds.background.pause();
+        sounds.background.currentTime = 0;
+    }
 });
 
 window.addEventListener('load', async () => {
     resizeCanvas();
     await preloadAssets();
-    startScreen.style.display = 'flex';
     canvas.style.cursor = 'crosshair';
 });
 window.addEventListener('resize', resizeCanvas);
-
