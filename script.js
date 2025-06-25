@@ -577,12 +577,12 @@ function actuallyStartGame(specialMessageType = null) {
     }, 1500);
 }
 
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'd') {
-        DEBUG_MODE = !DEBUG_MODE;
-        console.log(`Debug-Modus ist ${DEBUG_MODE ? 'AN' : 'AUS'}`);
-    }
-});
+//window.addEventListener('keydown', (e) => {
+   // if (e.key === 'd') {
+   //     DEBUG_MODE = !DEBUG_MODE;
+   //     console.log(`Debug-Modus ist ${DEBUG_MODE ? 'AN' : 'AUS'}`);
+ //   }
+//});
 
 function handleCanvasInteraction(e) {
     if (!gameStarted) return;
