@@ -531,7 +531,7 @@ function startGame() {
 
     if (noobNames.includes(lowerName)) {
         specialMessageType = 'noob';
-    } else if (lowerName === "lou" || lowerName === "louise") {
+    } else if (lowerName === "lo3333u" || lowerName === "lou333ise") {
         specialMessageType = 'heart';
     }
     
