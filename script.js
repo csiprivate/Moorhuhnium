@@ -1,4 +1,4 @@
-// DOM-Elemente
+// Globale Konstanten
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('scoreDisplay');
