@@ -5,139 +5,7 @@
     <!-- WICHTIG: Sorgt für die korrekte Skalierung auf Mobilgeräten -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moorhuhnium</title>
-    <style>
-        /* Grundlegende Styles für die Seite */
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-            background-color: #333;
-            color: white;
-            overflow: hidden; /* Verhindert Scrollbalken */
-        }
-
-        /* Hauptcontainer, der alles zentriert */
-        #page-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        /* Der Container, der das Spiel und die UI umschließt */
-        #game-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 1000px; /* Maximale Breite auf großen Bildschirmen */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* UI-Leiste für Punkte, Munition und Zeit */
-        #ui-bar {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 5px 10px;
-            margin-bottom: 10px;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            box-sizing: border-box;
-        }
-        
-        /* Container für den Canvas, damit er das Seitenverhältnis beibehält */
-        #gameContainer {
-            position: relative;
-            width: 100%;
-            /* Das Seitenverhältnis wird durch das JS im Canvas selbst geregelt */
-        }
-
-        canvas {
-            display: block; /* Entfernt den kleinen Abstand unter dem Canvas */
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            background-image: url('images/background.png');
-            background-size: cover;
-            background-position: center;
-            cursor: crosshair;
-        }
-
-        /* Overlays (Startbildschirm, Leaderboard, etc.) */
-        .screen-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            display: none; /* Standardmäßig ausgeblendet */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            border-radius: 8px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        #startScreen {
-            display: flex; /* Startbildschirm ist anfangs sichtbar */
-        }
-        
-        .screen-overlay h1 {
-            margin-top: 0;
-            font-size: 2.5em;
-        }
-        .screen-overlay p {
-            font-size: 1.2em;
-        }
-        
-        .screen-overlay input {
-            padding: 10px;
-            font-size: 1em;
-            margin: 20px 0;
-            border-radius: 5px;
-            border: none;
-            text-align: center;
-        }
-
-        .screen-overlay button {
-            padding: 15px 30px;
-            font-size: 1.2em;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            transition: background-color 0.3s;
-        }
-
-        .screen-overlay button:hover {
-            background-color: #45a049;
-        }
-        
-        #leaderboardList {
-            list-style: none;
-            padding: 0;
-            font-size: 1.5em;
-        }
-
-        /* Benutzerdefiniertes Alert-Fenster */
-        #customAlert {
-            z-index: 100;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
 
@@ -164,10 +32,19 @@
 
               <!-- Leaderboard -->
               <div id="leaderboardScreen" class="screen-overlay">
-                  <h1>Spielende!</h1>
-                  <ul id="leaderboardList"></ul>
-                  <button id="restartGameBtn">Neustart</button>
-              </div>
+                <h1>Bestenliste</h1>
+                <table id="leaderboardTable">
+                    <thead>
+                        <tr>
+                            <th>Platz</th>
+                            <th>Name</th>
+                            <th>Punkte</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+                <button id="restartGameBtn">Neustart</button>
+            </div>
               
               <!-- Custom Alert -->
               <div id="customAlert" class="screen-overlay">
