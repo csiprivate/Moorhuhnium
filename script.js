@@ -56,7 +56,7 @@
 
     
 
-    const SERVER_URL = "http://moornhuhniumserver.duckdns.org"; // Scorespeichern
+    const SERVER_URL = "https://moornhuhniumserver.duckdns.org"; // Scorespeichern
 
     async function fetchAndDisplayHighscores() {
         leaderboardBody.innerHTML = "<tr><td colspan=\"3\">Loading high scores...</td></tr>";
